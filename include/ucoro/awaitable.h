@@ -684,9 +684,16 @@ void co_launch(coo::awaitable<T> task) {
 
 
 template<typename T, typename callback>
+auto callback_awaiter(callback&& cb) 
+{
+	return coo::callback_awaiter<T, std::decay_t<callback>>{std::forward<callback>(cb)};
+}
+
+template<typename T, typename callback>
 auto callback_awaitable(callback&& cb) -> coo::awaitable<T>
 {
-	co_return co_await coo::callback_awaiter<T, callback>{std::forward<callback>(cb)};
+    // 在协程体内，必须明确使用 std::move，因为 cb 已经是协程帧里的局部变量了
+    co_return co_await coo::callback_awaiter<T, std::decay_t<callback>>{std::move(cb)};
 }
 
 template<typename Awaitable, typename Local, typename CompleteFunction>
