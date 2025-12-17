@@ -1,4 +1,4 @@
-﻿//
+//
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -247,7 +247,7 @@ namespace coo
 
 		std::coroutine_handle<> await_suspend(std::coroutine_handle<awaitable_promise<T>> h) noexcept
 		{
-			//return h.promise().continuation_;// same holder->continuation_ 
+			//return h.promise().continuation_;// same holder->continuation_ ,but 需要各种类型转换
             if (holder->continuation_) {
                 return holder->continuation_;
             }
@@ -456,8 +456,8 @@ namespace coo
                 };
             };
 
-            [](awaitable<T> lazy) -> auto_launch {
-				co_await std::move(lazy);
+            [](awaitable<T> task) -> auto_launch {
+				co_await std::move(task);
 			}(std::move(*this));
 		}
 
@@ -715,12 +715,12 @@ auto coro_start(Awaitable&& coro)
 }
 
 template<typename T>
-auto wait_get(coo::awaitable<T> lazy, std::any local_ = {}) -> T
+auto wait_get(coo::awaitable<T> task, std::any local_ = {}) -> T
 {
     std::promise<coo::mate::result_with_exception_t<T>> promise;
     auto future = promise.get_future();
 
-    lazy.detach_with_callback(std::move(local_), [promise = std::move(promise)](coo::mate::result_with_exception_t<T> result_) mutable
+    task.detach_with_callback(std::move(local_), [promise = std::move(promise)](coo::mate::result_with_exception_t<T> result_) mutable
     {
         // 协程完成后，将结果填充进 promise
         promise.set_value(std::move(result_));
