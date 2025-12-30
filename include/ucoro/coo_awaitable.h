@@ -120,10 +120,6 @@ namespace coo
         using result_with_exception_t = typename result_with_exception<T>::type;
 	} // namespace mate
 
-	struct debug_coro_promise
-	{
-	};
-
 	//////////////////////////////////////////////////////////////////////////
 	// 存储协程 promise 的返回值
 	template<typename T>
@@ -216,7 +212,7 @@ namespace coo
 
 	// Promise 类型实现...
 	template<typename T>
-	struct awaitable_promise : public awaitable_promise_value<T>, public debug_coro_promise
+	struct awaitable_promise : public awaitable_promise_value<T>
 	{
 		awaitable<T> get_return_object();
 
@@ -278,6 +274,7 @@ namespace coo
 
 		std::coroutine_handle<> continuation_; //std::noop_coroutine()
 		std::shared_ptr<std::any> local_;
+		//void* local_ = nullptr;
 	};
 
 	//////////////////////////////////////////////////////////////////////////
@@ -297,19 +294,17 @@ namespace coo
 		using promise_type = awaitable_promise<T>;
 
 		explicit awaitable(std::coroutine_handle<promise_type> h)
-			: current_coro_handle_(h) {
-		}
+			: current_coro_handle_(h) {}
 
-		
 		~awaitable() {
-					if (current_coro_handle_.done())
-					{
-							current_coro_handle_.destroy();
-					}
-					else
-					{
-							current_coro_handle_.resume();
-					}
+			if (current_coro_handle_){
+				if (current_coro_handle_.done()){
+						current_coro_handle_.destroy();
+				}
+				else{
+						current_coro_handle_.resume();
+				}
+			}
 		}
 		
 		awaitable(awaitable&& t) noexcept
