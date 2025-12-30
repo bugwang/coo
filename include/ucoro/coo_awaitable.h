@@ -301,7 +301,16 @@ namespace coo
 		}
 
 		
-		~awaitable() {}
+		~awaitable() {
+					if (current_coro_handle_.done())
+					{
+							current_coro_handle_.destroy();
+					}
+					else
+					{
+							current_coro_handle_.resume();
+					}
+		}
 		
 		awaitable(awaitable&& t) noexcept
 			: current_coro_handle_(t.current_coro_handle_) {
